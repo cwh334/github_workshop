@@ -8,13 +8,11 @@ dispBoard, size, shipSize, mines = network.createBoards(name, True)
 # hidboard, dispBoard, size, shipSize, mines = network.createBoards(name)
 
 while True:
-	################################################################################
 	# Opponents time to hit (waiting for opponent hit)
 	# - either you will lose
 	# - or opponent hit empty location or a ship location
 	# - or opponent hit a mine 
 	# 	- You get additional info about a nearby location to the opponent's ship
-	################################################################################
 	ans = network.receive()
 
 	if ans == 'lost':
@@ -23,12 +21,9 @@ while True:
 		ans = list(map(int,ans.split(',')))
 		print (ans[0],ans[1], "is nearby location of the ship")
 
-	################################################################################
 	# Your turn to hit
 	# You will get back either ' ', 'x', 'M'
-	#
-	# need to make your own logic to come up with a string "r,c" to send to opponent
-	################################################################################
+
 	guess = input("enter coordinates r,c: ")
 
 	ans = network.send(guess)
