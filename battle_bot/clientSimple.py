@@ -2,7 +2,7 @@ import network
 import random,time,os
 import bot
 
-name = input ("Please enter your name")
+name = input ("Please enter your name: ")
 
 # create boards
 dispBoard, size, shipSize, mines = network.createBoards(name, True)
@@ -13,6 +13,8 @@ coordinates = []
 for r in range(size):
 	for c in range(size):
 		coordinates.append([r, c])
+ship_loc = []
+near_loc = []
 """ Ends here """
 
 while True:
@@ -28,36 +30,47 @@ while True:
 	elif ans != None:
 		ans = list(map(int,ans.split(',')))
 		print (ans[0],ans[1], "is nearby location of the ship")
-
+		near_loc.append(ans)
+		#coordinates.remove(ans)
 	# Your turn to hit
-	# You will get back either ' ', 'x', 'M'
-
-	ship_loc = []
-	mine_loc = []
-	if ans != None:
-		mine_loc.append(ans)
+	# You will get back either ' ', 'x', 'M'		
 
 	largest_prob = [-2, -2]
 	random.shuffle(coordinates)
 	for coordinate in coordinates:
 		condition = True
-		for loc in ship_loc:
-			if abs(loc[0] - coordinate[0]) + abs(loc[1] - coordinate[1]) > 1:
-				condition = False
-		for loc in mine_loc:
-			if not(abs(coordinate[0] - ans[0]) <= 1 and abs(coordinate[1] - ans[1]) <= 1):
-				condition = False
+		if len(ship_loc) == 0:
+			for loc in near_loc:
+				if abs(coordinate[0] - loc[0]) > 1 or abs(coordinate[1] - loc[1]) > 1:
+					condition = False
+		elif len(ship_loc) == 1:
+			for loc in ship_loc:
+				if abs(loc[0] - coordinate[0]) + abs(loc[1] - coordinate[1]) > 1:
+					condition = False
+		else:
+			if ship_loc[0][0] == ship_loc[1][0]:
+				if not(coordinate[0] == ship_loc[0][0]) or\
+				not(abs(coordinate[1] - ship_loc[0][1]) == 1 or\
+					abs(coordinate[1] - ship_loc[-1][1]) == 1):
+					condition = False
+			else:
+				if not(coordinate[1] == ship_loc[0][1]) or\
+				not(abs(coordinate[0] - ship_loc[0][0]) == 1 or\
+					abs(coordinate[0] - ship_loc[-1][0]) == 1):
+					condition = False
+					
 		if condition == True:
 			if bot.count(coordinates, coordinate) > bot.count(coordinates, largest_prob):
 				largest_prob = coordinate
 	guess = ",".join(list(map(str, largest_prob)))
 	ans = network.send(guess)
-	if ans == " ":
-		coordinates.remove(largest_prob)
-	elif ans == "x":
-		ship_loc.append(coordinates.pop(coordinates.index(largest_prob)))
+	if ans == "x":
+		ship_loc.append(largest_prob)
+		ship_down = True
 	else:
-		mine_loc.append(coordinates.pop(coordinates.index(largest_prob)))
+		coordinates.remove(largest_prob)
+		
+
 
 	# Ends here
 	
