@@ -36,26 +36,5 @@ def arrange(list_pool, result):
 	else:
 		mine_loc.append(list_pool.pop(list_pool.index(largest_prob)))
 
-"""ship_loc = []
-mine_loc = []
-if ans != None:
-	mine_loc.append(ans)
-
-largest_prob = 0
-random.shuffle(coordinates)
-for coordinate in coordinates:
-	condition = True
-	for loc in ship_loc:
-		if abs(loc[0] - coordinate[0]) + abs(loc[1] - coordinate[1]) > 1:
-			condition = False
-	for loc in mine_loc:
-		if not(abs(coordinate[0] - ans[0]) <= 1 and abs(coordinate[1] - ans[1]) <= 1):
-			condition = False
-	if condition == True:
-			if count(coordinate) > largest_prob:
-				largest_prob = coordinate
-guess = ",".join(largest_prob)
-arrange(network.sent(guess))"""
-
 	
 
