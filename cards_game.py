@@ -12,11 +12,7 @@ class Card:
 		self.rank = rank
 
 	def __str__(self):
-		return ("*" + "-" * 5 + "*" + "\n" \
-		+ "|" + "{0}{1}" + " " * (6 - len(str({self.rank}))) + "|" + "\n" \
-		+ ("|" + " " * 5 + "|" + "\n") * 2 \
-		+ "|" + " " * (6 - len(str({self.rank}))) + "{0}{1}" + "|" + "\n" \
-		+ "*" + "-" * 5 + "*" + "\n").format(self.suit, self.rank)
+		return "*------*\n|{0}{1}    |\n|      |\n|    {0}{1}|\n*------*".format(self.rank,self.suit)
 # Compare cards be the rank, disregarding the suit
 	def __gt__(self, target):
 		if self.rank > target.rank:
@@ -34,6 +30,8 @@ class Card:
 			return True
 		else:
 			return False
+	def __int__(self):
+		return self.rank
 
 class Deck:
 	def __init__(self, full = True):
@@ -46,8 +44,10 @@ class Deck:
 					self.deck.append(Card(suit, rank))
 	def __str__(self):
 		tmp = ""
-		for card in self.deck:
-			tmp += str(card)
+		for row in range(5):
+			for c in self.deck:
+				tmp += str(c).split("\n")[row] + " "
+			tmp += "\n"
 		return tmp
 	
 	def shuffle(self):
@@ -135,9 +135,3 @@ if len(p1) == 0:
 	print("Player 2 wins.")
 elif len(p2) == 0:
 	print("Player 1 wins.")
-
-
-
-
-
-
