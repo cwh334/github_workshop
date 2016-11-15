@@ -12,7 +12,11 @@ class Card:
 		self.rank = rank
 
 	def __str__(self):
-		return "*------*\n|{0}{1}    |\n|      |\n|    {0}{1}|\n*------*".format(self.rank,self.suit)
+		return ("*" + "-" * 5 + "*" + "\n" \
+		+ "|" + "{0}{1}" + " " * (6 - len(str({self.rank}))) + "|" + "\n" \
+		+ ("|" + " " * 5 + "|" + "\n") * 2 \
+		+ "|" + " " * (6 - len(str({self.rank}))) + "{0}{1}" + "|" + "\n" \
+		+ "*" + "-" * 5 + "*" + "\n").format(self.suit, self.rank)
 # Compare cards be the rank, disregarding the suit
 	def __gt__(self, target):
 		if self.rank > target.rank:
@@ -44,10 +48,11 @@ class Deck:
 					self.deck.append(Card(suit, rank))
 	def __str__(self):
 		tmp = ""
-		for row in range(5):
-			for c in self.deck:
-				tmp += str(c).split("\n")[row] + " "
-			tmp += "\n"
+		for r in range(0,len(self.deck),5):
+			for row in range(6):
+				for c in self.deck[r:r + 5]:
+					tmp += str(c).split("\n")[row] + " "
+				tmp += "\n"
 		return tmp
 	
 	def shuffle(self):
@@ -83,9 +88,9 @@ class Deck:
 # Append cards to this deck
 		self.deck.append(item)
 
-	def merge(self, list):
+	def merge(self, mlist):
 # Merge a deck into this existing deck
-		self.deck = self.deck + list
+		self.deck = self.deck + mlist
 
 # Create a deck for each player
 original = Deck()
@@ -135,3 +140,6 @@ if len(p1) == 0:
 	print("Player 2 wins.")
 elif len(p2) == 0:
 	print("Player 1 wins.")
+
+
+
