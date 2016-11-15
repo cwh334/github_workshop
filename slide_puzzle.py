@@ -73,9 +73,19 @@ class Puzzle:
 			self.swap(self.tile_by_value(rand_nei))
 			self.check()
 
+	def win(self):
+		# winning condition: all the tile values match their correct locations
+		count = 0
+		for tile in self.board:
+			if tile.value == tile.r * self.size_col + (tile.c + 1):
+				count += 1
+		if count == self.size_row * self.size_col - 1:
+			return True
+		else:
+			return False
+
 	def play(self):
-		win = False
-		while win == False:
+		while not self.win():
 			os.system("clear")
 			print(self)
 			# ask player to choose a tile to move
@@ -86,14 +96,8 @@ class Puzzle:
 			# if the chosen tile is movable, swap and update the neighbors list
 			if int(choice) in self.neighbors:
 				self.swap(self.tile_by_value(int(choice)))
-				self.check()
-			# winning condition: all the tile values match their correct locations
-			count = 0
-			for tile in self.board:
-				if tile.value == tile.r * self.size_col + (tile.c + 1):
-					count += 1
-			if count == self.size_row * self.size_col - 1:
-				win = True
-		if win == True:
-			print(self)
-			print("You win.")
+				self.check()			
+			if self.win():
+				os.system("clear")
+				print(self)
+				print("You win.")
