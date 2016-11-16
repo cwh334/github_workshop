@@ -57,6 +57,7 @@ class Puzzle:
 		self.empty.value = tile.value
 		tile.value = " "
 		self.empty = tile
+		self.check()
 
 	def check(self):
 		# create and update the list of values of tiles that can be moved
@@ -71,7 +72,6 @@ class Puzzle:
 		for i in range(rep):
 			rand_nei = random.choice(self.neighbors)
 			self.swap(self.tile_by_value(rand_nei))
-			self.check()
 
 	def win(self):
 		# winning condition: all the tile values match their correct locations
@@ -95,9 +95,10 @@ class Puzzle:
 				choice = input("Cannot be moved. Please choose another: ")
 			# if the chosen tile is movable, swap and update the neighbors list
 			if int(choice) in self.neighbors:
-				self.swap(self.tile_by_value(int(choice)))
-				self.check()			
+				self.swap(self.tile_by_value(int(choice)))		
 			if self.win():
 				os.system("clear")
 				print(self)
 				print("You win.")
+
+p = Puzzle()
