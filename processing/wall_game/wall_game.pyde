@@ -25,7 +25,7 @@ class Runner:
         self.gravity()
         self.vx += 0.1
         self.y += self.vy
-        
+        self.x += self.vx
     def display(self):
         self.update()
         ellipse(self.x, self.y, self.r * 2, self.r * 2)
@@ -62,8 +62,6 @@ class Game:
         line(self.x, 0, self.x, self.h)
         line(self.x1, 0, self.x1, self.h)
         line(self.x2, 0, self.x2, self.h)
-        
-    
     
     
 game = Game()
@@ -73,8 +71,9 @@ def setup():
     fill(255)
     stroke(255)
     background(0)
-    line(game.x, 0, game.x, game.h)
+
 def draw():
     background(0)
     game.display()
+    
     
