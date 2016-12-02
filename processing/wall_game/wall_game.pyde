@@ -23,9 +23,9 @@ class Runner:
 
     def update(self):
         self.gravity()
-        self.vx += 0.1
+        self.vx += 0.05
         self.y += self.vy
-        self.x += self.vx
+
     def display(self):
         self.update()
         ellipse(self.x, self.y, self.r * 2, self.r * 2)
@@ -37,24 +37,30 @@ class Game:
         self.ground = 650
         self.state = ""
         self.runner = Runner(self.w / 2, self.ground - 35, self.ground)
+        self.layers = [self.w, self.w, self.w]
         self.x = self.w
         self.x1 = self.w
         self.x2 = self.w
+        self.vx = self.runner.vx
+        self.vx1 = self.runner.vx * 0.9
+        self.vx2 = self.runner.vx * 0.8
     
     def loadImage(self):
         pass
     
-    def scroll(self, border, percentage):
-        speed = self.runner.vx * percentage
-        if (border - speed) >= 0:
-            border -= speed
-        else:
-            border = self.w - speed + border
-    
     def update(self):
-        self.scroll(self.x, 1)
-        self.scroll(self.x1, 0.9)
-        self.scroll(self.x2, 0.8)
+        ratio = 1
+        for layer in self.layers:
+            speed = self.runner.vx * ratio
+            if layer - speed < 0:
+                layer = self.w - speed + layer
+            else:
+                layer -= speed
+            ratio -= 0.1
+        
+        # self.x -= self.vx
+        # self.x1 -= self.vx1
+        # self.x2 -= self.vx2
         
     def display(self):
         self.runner.display()
