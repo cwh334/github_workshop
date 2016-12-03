@@ -10,7 +10,7 @@ class Runner:
         self.ground = ground
         self.vx = 1
         self.vy = 0
-        self.hammer = False
+        self.hammers = []
         self.jump = False
         
     def loadImage(self):
@@ -32,11 +32,19 @@ class Runner:
             self.vy -= 0.5
 
         self.y += self.vy
+        
+        for hammer in self.hammers:
+            if hammer.throw == True:
+                hammer.vx = self.vx + 5
+                hammer.vy = self.vy
 
     def display(self):
         self.update()
         ellipse(self.x, self.y, self.r * 2, self.r * 2)
         
+        ellipse(30, 30, 30, 30)
+        ellipse(60, 30, 30, 30)
+
 class Wall:
     def __init__(self, x = 1280, game_w = 1280, game_h = 720):
         self.w = randint(60, 80)
@@ -55,12 +63,22 @@ class Hammer:
         self.x = x
         self.y = randint(50, 600)
         self.r = 25
+        self.vx = 0
+        self.vy = 0
+        self.throw = False
+        self.collected = False
         
     def loadImage(self):
         pass
         
+    def update(self):
+        if self.throw:
+            self.x += self.vx
+            self.y += self.vy
+        
     def display(self):
-        ellipse(self.x, self.y, self.r * 2, self.r * 2)
+        if not self.collected or self.throw:
+            ellipse(self.x, self.y, self.r * 2, self.r * 2)
 
 class Game:
     def __init__(self):
@@ -91,21 +109,22 @@ class Game:
             wall.x -= self.runner.vx
             if collision(self.runner, wall):
                 self.state = "over"
-                line(0, 0, 700, 700)
-            if wall.x <= 0:
+                
+            if wall.x < 0:
                 del self.walls[0]
                 self.walls.append(Wall())
-                prob = randint(1, 10)
+                prob = randint(1, 2)
                 if prob == 1:
                     self.hammers.append(Hammer())
-            
-                line(0, 0, 700, 700)
         
         for hammer in self.hammers:
-            hammer.x -= self.runner.vx    
+            hammer.x -= self.runner.vx  
             if collision(self.runner, hammer):
-                self.runner.hammer = True
-                
+                self.runner.hammers.append(hammer)
+                self.hammers.remove(hammer)
+            if hammer.x < 0:
+                del hammer
+
     def display(self):
         # self.runner.display()
         self.update()
@@ -123,8 +142,7 @@ class Game:
             
 def collision(a, b, game_h = 720):
     if isinstance(a, Runner) and isinstance(b, Wall):
-        if a.y > game_h - b.h - a.r:
-            # and b.x - a.r < a.x < b.x + b.w + a.r:
+        if a.y > game_h - b.h - a.r and b.x - a.r < a.x < b.x + b.w + a.r:
             return True
         else:
             return False
@@ -155,6 +173,10 @@ def draw():
 def keyPressed():
     if keyCode == UP:
         game.runner.jump = True
+    if keyCode == RIGHT:
+        if len(game.runner.hammers) > 0:
+            line(0, 0, 500, 500)
+            game.runner.hammer[0].throw = True
         
 def keyReleased():
     game.runner.jump = False
