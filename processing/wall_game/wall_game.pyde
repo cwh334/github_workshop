@@ -30,6 +30,7 @@ class Runner:
         self.vx = 1
         self.vy = 0
         self.hammers = []
+        self.thrown = []
         self.jump = False
         
     def loadImage(self):
@@ -60,12 +61,14 @@ class Runner:
                 hammer.y = hammer.owner.y
                 hammer.vx = self.vx + 5
                 hammer.vy = self.vy
-                self.hammers.remove(hammer)
+                self.thrown.append(self.hammers.pop(0))
 
     def display(self):
         self.update()
         ellipse(self.x, self.y, self.r * 2, self.r * 2)
         for hammer in self.hammers:
+            hammer.display()
+        for hammer in self.thrown:
             hammer.display()
         
 
