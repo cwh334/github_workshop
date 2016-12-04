@@ -2,8 +2,27 @@ import os
 from random import randint
 path = os.getcwd()
 
+ground = 670
+def collision(a, b, game_h = 720):
+    if isinstance(a, Runner) and isinstance(b, Wall):
+        if a.y > game_h - b.h - a.r and b.x - a.r < a.x < b.x + b.w + a.r:
+            return True
+        else:
+            return False
+    if isinstance(a, Runner) and isinstance(b, Hammer):
+        if ((a.x - b.x) ** 2 + (a.y - b.y) ** 2) ** 0.5\
+            < a.r + b.r:
+            return True
+        else:
+            return False
+    if isinstance(a, Hammer) and (b, Wall):
+        if a.y > b.y and a.r > b.x - a.x:
+            return True
+        else:
+            return False
+
 class Runner:
-    def __init__(self, x, y, ground):
+    def __init__(self, x, y):
         self.x = x
         self.y = y
         self.r = 45
@@ -34,16 +53,21 @@ class Runner:
         self.y += self.vy
         
         for hammer in self.hammers:
+            hammer.x = 30 + (60 * self.hammers.index(hammer))
+            hammer.y = 30
             if hammer.throw == True:
+                hammer.x = hammer.owner.x
+                hammer.y = hammer.owner.y
                 hammer.vx = self.vx + 5
                 hammer.vy = self.vy
+                self.hammers.remove(hammer)
 
     def display(self):
         self.update()
         ellipse(self.x, self.y, self.r * 2, self.r * 2)
+        for hammer in self.hammers:
+            hammer.display()
         
-        ellipse(30, 30, 30, 30)
-        ellipse(60, 30, 30, 30)
 
 class Wall:
     def __init__(self, x = 1280, game_w = 1280, game_h = 720):
@@ -66,7 +90,7 @@ class Hammer:
         self.vx = 0
         self.vy = 0
         self.throw = False
-        self.collected = False
+        self.owner = ""
         
     def loadImage(self):
         pass
@@ -75,18 +99,20 @@ class Hammer:
         if self.throw:
             self.x += self.vx
             self.y += self.vy
+            if self.x > 1280:
+                del self
         
     def display(self):
-        if not self.collected or self.throw:
-            ellipse(self.x, self.y, self.r * 2, self.r * 2)
+        self.update()
+        ellipse(self.x, self.y, self.r * 2, self.r * 2)
 
 class Game:
     def __init__(self):
         self.w = 1280
         self.h = 720
-        self.ground = 670
+        self.ground = ground
         self.state = ""
-        self.runner = Runner(self.w / 2, self.ground - 35, self.ground)
+        self.runner = Runner(self.w / 2, ground - 35)
         self.layers = [self.w, self.w, self.w]
         self.walls = [Wall(), Wall(1920)]
         self.hammers = []
@@ -113,15 +139,19 @@ class Game:
             if wall.x < 0:
                 del self.walls[0]
                 self.walls.append(Wall())
-                prob = randint(1, 2)
+                prob = randint(1, 1)
                 if prob == 1:
                     self.hammers.append(Hammer())
+            
+            if len(self.runner.hammers) > 0 and collision(self.runner.hammers[0], wall):
+                del self.runner.hammers[0]
+                del wall
         
         for hammer in self.hammers:
             hammer.x -= self.runner.vx  
             if collision(self.runner, hammer):
-                self.runner.hammers.append(hammer)
-                self.hammers.remove(hammer)
+                hammer.owner = self.runner
+                self.runner.hammers.append(self.hammers.pop(self.hammers.index(hammer)))
             if hammer.x < 0:
                 del hammer
 
@@ -139,24 +169,6 @@ class Game:
         
         for hammer in self.hammers:
             hammer.display()
-            
-def collision(a, b, game_h = 720):
-    if isinstance(a, Runner) and isinstance(b, Wall):
-        if a.y > game_h - b.h - a.r and b.x - a.r < a.x < b.x + b.w + a.r:
-            return True
-        else:
-            return False
-    if isinstance(a, Runner) and isinstance(b, Hammer):
-        if ((a.x - b.x) ** 2 + (a.y - b.y) ** 2) ** 0.5\
-            < a.r + b.r:
-            return True
-        else:
-            return False
-    if isinstanct(a, Hammer) and (b, Wall):
-        if a.y > b.y and a.r > b.x - a.x:
-            return True
-        else:
-            return False
     
 game = Game() 
     
@@ -175,9 +187,8 @@ def keyPressed():
         game.runner.jump = True
     if keyCode == RIGHT:
         if len(game.runner.hammers) > 0:
-            line(0, 0, 500, 500)
-            game.runner.hammer[0].throw = True
-        
+            game.runner.hammers[0].throw = True
+            
 def keyReleased():
     game.runner.jump = False
 
