@@ -71,24 +71,39 @@ class Runner:
         
 
 class Wall:
-    def __init__(self, x = 1280, game_w = 1280, game_h = 720):
+    def __init__(self, x = game_width):
         self.w = randint(60, 80)
-        self.h = randint(300, 550)
+        self.h = randint(300, 525)
         self.x = x
-        self.y = game_h - self.h
+        self.y = 0
+        self.vy = 0
+        self.ground = ground
         self.knocked_down = False
     
     def loadImage(self):
         pass
+        
+    def gravity(self):
+        if self.y + self.h < self.ground:
+            self.vy += 0.1
+            if self.y + self.h + self.vy > self.ground:
+                self.vy = self.ground - self.h - self.y
+        else:
+            self.vy = 0
+                
+    def update(self):
+        self.gravity()
+        self.y += self.vy
     
     def display(self):
+        self.update()
         if not self.knocked_down:
             rect(self.x, self.y, self.w, self.h)
         else:
            pass 
     
 class Hammer:
-    def __init__(self, x = 1600):
+    def __init__(self, x = game_width * 1.25):
         self.x = x
         self.y = randint(50, 600)
         self.r = 25
