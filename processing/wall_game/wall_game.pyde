@@ -145,7 +145,7 @@ class Game:
         self.w = game_width
         self.h = game_height
         self.ground = ground
-        self.state = "play" # menu, play, over, fly
+        self.state = "menu" # menu, play, over, fly
         self.runner = Runner(self.w / 2, ground - 35)
         self.layers = [self.w, self.w, self.w] # record start of each background layer
         self.walls = [Wall(), Wall(game_width * 1.5)]
@@ -156,61 +156,69 @@ class Game:
     
     def update(self):
         
-        ratio = 1
-        for i in range(len(self.layers)):
-            # the speed in which each layer moves (different ratios)
-            speed = self.runner.vx * ratio
-            if self.layers[i] - speed < 0:
-                self.layers[i] += (self.w - speed)
-            else:
-                self.layers[i] -= speed
-            ratio -= 0.1 # layers at the back moves slower
-        
-        for wall in self.walls:
-            wall.x -= self.runner.vx
-            # check if runner hits the wall
-            if collision(self.runner, wall) and not wall.knocked_down:
-                self.state = "over"
-            # when a wall disappears out of screen, built another
-            if wall.x < 0:
-                del self.walls[0]
-                self.walls.append(Wall())
-                # the chances of a hammer appearing after each wall
-                prob = randint(1, 8)
-                if prob == 1:
-                    self.hammers.append(Hammer())
-                    
-            for hammer in self.runner.thrown:
-                # when hammer hits wall, hammer disappears and wall knocked down
-                if collision(hammer, wall) and not wall.knocked_down:
-                    self.runner.thrown.remove(hammer)
-                    wall.knocked_down = True
-                    # self.knocked_down.append(self.walls.pop(self.walls.index(wall)))
-        
-        for hammer in self.hammers:
-            hammer.x -= self.runner.vx  
-            # runner obtains hammer upon collision
-            if collision(self.runner, hammer):
-                hammer.owner = self.runner
-                self.runner.hammers.append(self.hammers.pop(self.hammers.index(hammer)))
-            # remove hammer from list when disappears from screen unobtained
-            if hammer.x < 0:
-                self.hammers.remove(hammer)
-
+        if self.state == "play":
+            ratio = 1
+            for i in range(len(self.layers)):
+                # the speed in which each layer moves (different ratios)
+                speed = self.runner.vx * ratio
+                if self.layers[i] - speed < 0:
+                    self.layers[i] += (self.w - speed)
+                else:
+                    self.layers[i] -= speed
+                ratio -= 0.1 # layers at the back moves slower
+            
+            for wall in self.walls:
+                wall.x -= self.runner.vx
+                # check if runner hits the wall
+                if collision(self.runner, wall) and not wall.knocked_down:
+                    self.state = "over"
+                # when a wall disappears out of screen, built another
+                if wall.x < 0:
+                    del self.walls[0]
+                    self.walls.append(Wall())
+                    # the chances of a hammer appearing after each wall
+                    prob = randint(1, 8)
+                    if prob == 1:
+                        self.hammers.append(Hammer())
+                        
+                for hammer in self.runner.thrown:
+                    # when hammer hits wall, hammer disappears and wall knocked down
+                    if collision(hammer, wall) and not wall.knocked_down:
+                        self.runner.thrown.remove(hammer)
+                        wall.knocked_down = True
+                        # self.knocked_down.append(self.walls.pop(self.walls.index(wall)))
+            
+            for hammer in self.hammers:
+                hammer.x -= self.runner.vx  
+                # runner obtains hammer upon collision
+                if collision(self.runner, hammer):
+                    hammer.owner = self.runner
+                    self.runner.hammers.append(self.hammers.pop(self.hammers.index(hammer)))
+                # remove hammer from list when disappears from screen unobtained
+                if hammer.x < 0:
+                    self.hammers.remove(hammer)
+    
     def display(self):
         
-        self.update()
-        # lines represent the background
-        line(self.layers[0], 0, self.layers[0], self.h)
-        line(self.layers[1], 0, self.layers[1], self.h)
-        line(self.layers[2], 0, self.layers[2], self.h)
-        self.runner.display()
+        if self.state == "play":
+            self.update()
+            # lines represent the background
+            line(self.layers[0], 0, self.layers[0], self.h)
+            line(self.layers[1], 0, self.layers[1], self.h)
+            line(self.layers[2], 0, self.layers[2], self.h)
+            self.runner.display()
+        
+            for wall in self.walls:
+                wall.display()
     
-        for wall in self.walls:
-            wall.display()
-
-        for hammer in self.hammers:
-            hammer.display()
+            for hammer in self.hammers:
+                hammer.display()
+                
+        elif self.state == "menu":
+            rect(600, 350, 80, 20)
+            
+        elif self.state == "over":
+            pass
     
 game = Game() 
     
@@ -225,15 +233,21 @@ def draw():
     game.display()
     
 def keyPressed():
-    if keyCode == UP: # jump
-        game.runner.jump = True
-    if keyCode == RIGHT: # throw first hammer
-        if len(game.runner.hammers) > 0:
-            game.runner.hammers[0].throw = True
+    if game.state == "over":
+        game.state = "menu"
+    elif game.state == "play":
+        if keyCode == UP: # jump
+            game.runner.jump = True
+        if keyCode == RIGHT: # throw first hammer
+            if len(game.runner.hammers) > 0:
+                game.runner.hammers[0].throw = True
             
 def keyReleased():
     game.runner.jump = False
 
+def mouseClicked():
+    if game.state == "menu" and 600 < mouseX < 680 and 350 < mouseY < 370:
+        game.state = "play"
 
 
     
