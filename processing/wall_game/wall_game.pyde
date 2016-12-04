@@ -90,6 +90,7 @@ class Hammer:
         self.x = x
         self.y = randint(50, 600)
         self.r = 25
+        self.ground = ground
         self.vx = 0
         self.vy = 0
         self.throw = False
@@ -97,8 +98,15 @@ class Hammer:
         
     def loadImage(self):
         pass
-        
+    
+    def gravity(self):
+        if self.y + self.r < self.ground:
+            self.vy += 0.1
+            if self.y + self.r + self.vy > self.ground:
+                self.vy = self.ground - self.r - self.y
+    
     def update(self):
+        self.gravity()
         if self.throw:
             self.x += self.vx
             self.y += self.vy
