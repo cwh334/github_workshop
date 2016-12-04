@@ -3,20 +3,18 @@ from random import randint
 path = os.getcwd()
 
 ground = 670
-def collision(a, b, game_h = 720):
-    if isinstance(a, Runner) and isinstance(b, Wall):
-        if a.y > game_h - b.h - a.r and b.x - a.r < a.x < b.x + b.w + a.r:
+game_width = 1280
+game_height = 720
+
+def collision(a, b):
+    if (isinstance(a, Runner) and isinstance(b, Wall)) or (isinstance(a, Hammer) and (b, Wall)):
+        if b.y + b.h + a.r > a.y > b.y - a.r and b.x - a.r < a.x < b.x + b.w + a.r:
             return True
         else:
             return False
     if isinstance(a, Runner) and isinstance(b, Hammer):
         if ((a.x - b.x) ** 2 + (a.y - b.y) ** 2) ** 0.5\
             < a.r + b.r:
-            return True
-        else:
-            return False
-    if isinstance(a, Hammer) and (b, Wall):
-        if a.y > b.y and a.r > b.x - a.x:
             return True
         else:
             return False
@@ -61,7 +59,7 @@ class Runner:
                 hammer.y = hammer.owner.y
                 hammer.vx = self.vx + 5
                 hammer.vy = self.vy
-                self.thrown.append(self.hammers.pop(0))
+                self.thrown.append(self.hammers.pop(0))     
 
     def display(self):
         self.update()
@@ -78,12 +76,16 @@ class Wall:
         self.h = randint(300, 550)
         self.x = x
         self.y = game_h - self.h
+        self.knocked_down = False
     
     def loadImage(self):
         pass
     
     def display(self):
-        rect(self.x, self.y, self.w, self.h)    
+        if not self.knocked_down:
+            rect(self.x, self.y, self.w, self.h)
+        else:
+           pass 
     
 class Hammer:
     def __init__(self, x = 1600):
@@ -110,8 +112,7 @@ class Hammer:
         if self.throw:
             self.x += self.vx
             self.y += self.vy
-            if self.x > 1280:
-                del self
+            
         
     def display(self):
         self.update()
@@ -119,8 +120,8 @@ class Hammer:
 
 class Game:
     def __init__(self):
-        self.w = 1280
-        self.h = 720
+        self.w = game_width
+        self.h = game_height
         self.ground = ground
         self.state = ""
         self.runner = Runner(self.w / 2, ground - 35)
@@ -144,7 +145,8 @@ class Game:
         
         for wall in self.walls:
             wall.x -= self.runner.vx
-            if collision(self.runner, wall):
+            
+            if collision(self.runner, wall) and not wall.knocked_down:
                 self.state = "over"
                 
             if wall.x < 0:
@@ -153,10 +155,12 @@ class Game:
                 prob = randint(1, 1)
                 if prob == 1:
                     self.hammers.append(Hammer())
-            
-            if len(self.runner.hammers) > 0 and collision(self.runner.hammers[0], wall):
-                del self.runner.hammers[0]
-                del wall
+                    
+            for hammer in self.runner.thrown:
+                if collision(hammer, wall):
+                    self.runner.thrown.remove(hammer)
+                    wall.knocked_down = True
+                    # self.knocked_down.append(self.walls.pop(self.walls.index(wall)))
         
         for hammer in self.hammers:
             hammer.x -= self.runner.vx  
@@ -164,7 +168,7 @@ class Game:
                 hammer.owner = self.runner
                 self.runner.hammers.append(self.hammers.pop(self.hammers.index(hammer)))
             if hammer.x < 0:
-                del hammer
+                self.hammers.remove(hammer)
 
     def display(self):
         # self.runner.display()
@@ -177,7 +181,7 @@ class Game:
     
         for wall in self.walls:
             wall.display()
-        
+
         for hammer in self.hammers:
             hammer.display()
     
