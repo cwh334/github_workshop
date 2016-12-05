@@ -21,7 +21,7 @@ def collision(a, b):
             return False
 
 class Runner:
-    def __init__(self, x, y):
+    def __init__(self, x, y, fly = False):
         self.x = x
         self.y = y
         self.r = 45
@@ -31,6 +31,10 @@ class Runner:
         self.hammers = [] # hammers obtained
         self.thrown = [] # hammers thrown
         self.jump = False
+        self.fly = fly
+        if self.fly:
+            self.y = game_height
+            self.vy = - 3
         
     def loadImage(self):
         pass
@@ -44,11 +48,16 @@ class Runner:
             self.vy = 0
 
     def update(self):
-        self.gravity()
+        if not self.fly:
+            self.gravity()
+        
         self.vx += 0.002 # level gradually increases as the speed increases
                 
         if self.jump:
             self.vy -= 0.5
+            
+        if self.fly:
+            self.x += self.vx
 
         self.y += self.vy
         
@@ -67,11 +76,11 @@ class Runner:
     def display(self):
         self.update()
         ellipse(self.x, self.y, self.r * 2, self.r * 2)
-        for hammer in self.hammers:
-            hammer.display()
-        for hammer in self.thrown:
-            hammer.display()
-        
+        if not self.fly:
+            for hammer in self.hammers:
+                hammer.display()
+            for hammer in self.thrown:
+                hammer.display()
 
 class Wall:
     def __init__(self, x = game_width):
@@ -167,6 +176,11 @@ class Game:
                     self.layers[i] -= speed
                 ratio -= 0.1 # layers at the back moves slower
             
+            # if runner goes out of screen, fly
+            if self.runner.y < -self.runner.r:
+                self.state = "fly"
+                self.runner = Runner(self.w / 2, ground - 35, True)
+            
             for wall in self.walls:
                 wall.x -= self.runner.vx
                 # check if runner hits the wall
@@ -177,7 +191,7 @@ class Game:
                     del self.walls[0]
                     self.walls.append(Wall())
                     # the chances of a hammer appearing after each wall
-                    prob = randint(1, 8)
+                    prob = randint(1, 5)
                     if prob == 1:
                         self.hammers.append(Hammer())
                         
@@ -197,11 +211,15 @@ class Game:
                 # remove hammer from list when disappears from screen unobtained
                 if hammer.x < 0:
                     self.hammers.remove(hammer)
-    
+                    
+                    
+        if self.state == "fly":
+            if self.runner.x > game_width or self.runner.y < 0:
+                self.state = "over"
+            
     def display(self):
-        
+        self.update()
         if self.state == "play":
-            self.update()
             # lines represent the background
             line(self.layers[0], 0, self.layers[0], self.h)
             line(self.layers[1], 0, self.layers[1], self.h)
@@ -218,7 +236,10 @@ class Game:
             rect(600, 350, 80, 20)
             
         elif self.state == "over":
-            pass
+            ellipse(640, 360, 100, 100)
+            
+        else:
+            self.runner.display()
     
 game = Game() 
     
