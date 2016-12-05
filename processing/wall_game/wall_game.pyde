@@ -268,6 +268,7 @@ def keyReleased():
 
 def mouseClicked():
     if game.state == "menu" and 600 < mouseX < 680 and 350 < mouseY < 370:
+        game.__init__()
         game.state = "play"
 
 
