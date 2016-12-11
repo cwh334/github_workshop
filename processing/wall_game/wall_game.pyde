@@ -5,6 +5,9 @@ path = os.getcwd()
 ground = 670
 game_width = 1280
 game_height = 720
+img_wall = loadImage(path + "/wall.png")
+img_transwall = loadImage(path + "/transwall.png")
+img_hammer = loadImage(path + "/hammer.png")
 
 def collision(a, b):
     # returns True if two targets collide. Target argument in the order of: runner, hammer, wall
@@ -56,14 +59,14 @@ class Runner:
         if not self.fly:
             self.gravity()
         
-        self.vx += 0.005 # level gradually increases as the speed increases
+        self.vx += 0.002 # level gradually increases as the speed increases
                 
         if self.jump:
             self.vy -= 0.5
             
         if self.fly:
             self.x += self.vx
-            self.frame_num_f = (self.frame_num_f + 0.1) % self.frame_total_f
+            self.frame_num_f = (self.frame_num_f + 1) % self.frame_total_f
 
         self.y += self.vy
         
@@ -83,10 +86,10 @@ class Runner:
         self.update()
         
         if self.fly:
-            image(self.img_fly, self.x - self.r * 3, self.y - self.r, self.w * 3, self.h,\
-                  0, int(self.frame_num_f * self.w * 3),\
-                  int((self.frame_num_f + 1) * self.w * 3), self.h)
-        
+            image(self.img_fly, self.x - self.r * 3, self.y - self.r, self.r * 6, self.r * 2,\
+                  int(self.frame_num_f * self.r * 6), 0,\
+                  int((self.frame_num_f + 1) * self.r * 6), self.r * 2)
+            ellipse(self.x, self.y, self.r * 2, self.r * 2)
 
         if not self.fly:
             for hammer in self.hammers:
@@ -96,9 +99,9 @@ class Runner:
                 
             ellipse(self.x, self.y, self.r * 2, self.r * 2)
             
-            # image(self.img, self.x - self.r, self.y - self.r, self.r * 1.5, self.r * 2,\
-            #       int(self.frame_num * self.r * 1.5), 0,\
-            #       int((self.frame_num + 1) * self.r * 1.5), self.r * 2)
+            # image(self.img, self.x - self.r, self.y - self.r, self.r * 2, self.r * 2,\
+            #       int(self.frame_num * self.r * 2), 0,\
+            #       int((self.frame_num + 1) * self.r * 2), self.r * 2)
 
 
 class Wall:
@@ -112,7 +115,8 @@ class Wall:
         self.ground = ground
         # when knocked down by a thrown hammer, no longer apply to collisions
         self.knocked_down = False
-        self.img = loadImage(path + "/wall.png")
+        self.img = img_wall
+        self.transwall = img_transwall
         
     def gravity(self):
         # visual effect of walls being built on spot
@@ -134,7 +138,7 @@ class Wall:
             # rect(self.x, self.y, self.w, self.h)
         else:
             # display transparent walls if knocked down
-           pass 
+            image(self.transwall, self.x, self.y, self.w, self.h)
     
 class Hammer:
     def __init__(self, x = game_width * 1.25):
@@ -148,7 +152,7 @@ class Hammer:
         self.owner = ""
         self.frame_num = 0
         self.frame_total = 6
-        self.img = loadImage(path + "/hammer.png")
+        self.img = img_hammer
     
     def gravity(self):
         if self.y + self.r < self.ground:
@@ -194,7 +198,10 @@ class Game:
         self.play_button = loadImage(path + "/play_button.png")
         self.gameover = loadImage(path + "/gameover.png")
         self.restart = loadImage(path + "/text.png")
-
+        self.stars = loadImage(path + "/stars.png")
+        self.sky = loadImage(path + "/sky.png")
+        self.frame_num_s = 0
+        self.frame_total_s = 4
     def update(self):
         if self.state == "play":
             ratio = 1
@@ -247,14 +254,16 @@ class Game:
         if self.state == "fly":
             if self.runner.x > game_width or self.runner.y < 0:
                 self.state = "over"
+                
+        if self.state == "over":
+            self.frame_num_s = (self.frame_num_s + 1) % self.frame_total_s
+            if not self.runner.fly:
+                self.runner.x = self.w / 2
+                self.runner.y = ground - 35
             
     def display(self):
         self.update()
         if self.state == "play":
-            # lines represent the background
-            # line(self.layers[0], 0, self.layers[0], self.h)
-            # line(self.layers[1], 0, self.layers[1], self.h)
-            # line(self.layers[2], 0, self.layers[2], self.h)
             
             for img in self.bg:
                 loc = self.layers[self.bg.index(img)]
@@ -274,17 +283,28 @@ class Game:
             image(self.play_button, 580, 345, 120, 30)
             
         elif self.state == "over":
-            image(self.gameover, 461, 112)
-            image(self.restart, 461, 380)
+            image(self.gameover, 460, 112)
+            image(self.restart, 460, 380)
+            if not self.runner.fly:
+                image(self.stars,\
+                      self.runner.x - self.runner.r, self.runner.y - self.runner.r * 2,\
+                      self.runner.r * 2, self.runner.r,\
+                      int(self.frame_num_s * self.runner.r * 2), 0,\
+                      int((self.frame_num_s + 1) * self.runner.r * 2), self.runner.r)
+                image(self.runner.img,\
+                      self.runner.x - self.runner.r, self.runner.y - self.runner.r,\
+                      self.runner.r * 2, self.runner.r * 2,\
+                      0, 0,\
+                      self.runner.r * 2, self.runner.r * 2)
             
         else:
+            image(self.sky, 0, 0)
             self.runner.display()
-            image(self.bg[0], 0, 0)
     
 game = Game() 
-    
+
 def setup():
-    size(game.w, game.h)
+    size(game.w, game.h, P2D)
     fill(255)
     stroke(255)
     background(0)
