@@ -40,6 +40,7 @@ class Runner:
             self.vy = - 3
         self.frame_num = 0
         self.frame_total = 6
+        self.switch = 0
         self.frame_num_f = 0
         self.frame_total_f = 2
         self.img = loadImage(path + "/trump.png")
@@ -54,7 +55,10 @@ class Runner:
             self.vy = 0
 
     def update(self):
-        self.frame_num = (self.frame_num + 1) % self.frame_total
+        
+        if self.switch == 2:
+            self.frame_num = (self.frame_num + 1) % self.frame_total
+        
         
         if not self.fly:
             self.gravity()
@@ -66,8 +70,10 @@ class Runner:
             
         if self.fly:
             self.x += self.vx
-            self.frame_num_f = (self.frame_num_f + 1) % self.frame_total_f
-
+            if self.switch == 2:
+                self.frame_num_f = (self.frame_num_f + 1) % self.frame_total_f
+        
+        self.switch = (self.switch + 1) % 3
         self.y += self.vy
         
         for hammer in self.hammers:
@@ -89,7 +95,7 @@ class Runner:
             image(self.img_fly, self.x - self.r * 3, self.y - self.r, self.r * 6, self.r * 2,\
                   int(self.frame_num_f * self.r * 6), 0,\
                   int((self.frame_num_f + 1) * self.r * 6), self.r * 2)
-            ellipse(self.x, self.y, self.r * 2, self.r * 2)
+            # ellipse(self.x, self.y, self.r * 2, self.r * 2)
 
         if not self.fly:
             for hammer in self.hammers:
@@ -97,11 +103,11 @@ class Runner:
             for hammer in self.thrown:
                 hammer.display()
                 
-            ellipse(self.x, self.y, self.r * 2, self.r * 2)
+            # ellipse(self.x, self.y, self.r * 2, self.r * 2)
             
-            # image(self.img, self.x - self.r, self.y - self.r, self.r * 2, self.r * 2,\
-            #       int(self.frame_num * self.r * 2), 0,\
-            #       int((self.frame_num + 1) * self.r * 2), self.r * 2)
+            image(self.img, self.x - self.r, self.y - self.r, self.r * 2, self.r * 2,\
+                  int(self.frame_num * self.r * 2), 0,\
+                  int((self.frame_num + 1) * self.r * 2), self.r * 2)
 
 
 class Wall:
@@ -202,6 +208,8 @@ class Game:
         self.sky = loadImage(path + "/sky.png")
         self.frame_num_s = 0
         self.frame_total_s = 4
+        self.switch = 0
+        
     def update(self):
         if self.state == "play":
             ratio = 1
@@ -229,7 +237,7 @@ class Game:
                     del self.walls[0]
                     self.walls.append(Wall())
                     # the chances of a hammer appearing after each wall
-                    prob = randint(1, 1)
+                    prob = randint(1, 8)
                     if prob == 1:
                         self.hammers.append(Hammer())
                         
@@ -256,9 +264,10 @@ class Game:
                 self.state = "over"
                 
         if self.state == "over":
-            self.frame_num_s = (self.frame_num_s + 1) % self.frame_total_s
+            if self.switch == 2:
+                self.frame_num_s = (self.frame_num_s + 1) % self.frame_total_s
+            self.switch = (self.switch + 1) % 3
             if not self.runner.fly:
-                self.runner.x = self.w / 2
                 self.runner.y = ground - 35
             
     def display(self):
