@@ -194,6 +194,7 @@ class Game:
         self.frame_num_s = 0 # current stars frame (to be displayed above runner)
         self.frame_total_s = 4
         self.switch = 0
+        self.score = 0 # number of walls runner jumps pass
         
     def update(self):
         if self.state == "play":
@@ -219,6 +220,7 @@ class Game:
                     self.state = "over"
                 # when a wall disappears out of screen, built another
                 if wall.x < 0:
+                    self.score += 1
                     del self.walls[0]
                     self.walls.append(Wall())
                     # the chances of a hammer appearing after each wall
@@ -276,8 +278,9 @@ class Game:
             image(self.play_button, 580, 345, 120, 30)
             
         elif self.state == "over":
-            image(self.gameover, 460, 112)
-            image(self.restart, 460, 380)
+            text(self.score, 635, 380)
+            image(self.gameover, 460, 110)
+            image(self.restart, 460, 350)
             if not self.runner.fly:
                 image(self.stars,\
                       self.runner.x - self.runner.r, self.runner.y - self.runner.r * 2,\
@@ -299,7 +302,6 @@ game = Game()
 def setup():
     size(game.w, game.h, P2D)
     fill(255)
-    stroke(255)
     background(0)
 
 def draw():
