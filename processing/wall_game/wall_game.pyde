@@ -10,7 +10,8 @@ img_transwall = loadImage(path + "/transwall.png")
 img_hammer = loadImage(path + "/hammer.png")
 
 def collision(a, b):
-    # returns True if two targets collide. Target argument in the order of: runner, hammer, wall
+    # returns True if two targets collide. 
+    # target argument in the order of: runner, hammer, wall
     if (isinstance(a, Runner) and isinstance(b, Wall)) or (isinstance(a, Hammer) and (b, Wall)):
         if b.y + b.h + a.r > a.y > b.y - a.r and b.x - a.r < a.x < b.x + b.w + a.r:
             return True
@@ -22,6 +23,17 @@ def collision(a, b):
             return True
         else:
             return False
+        
+def gravity(obj, dis):
+    # obj: the object applying gravity to
+    # dis: the distance between obj.y and its bottom end
+    if obj.y + dis < obj.ground:
+        obj.vy += 0.1
+        # to ensure runner cannot go under ground level
+        if obj.y + dis + obj.vy > obj.ground:
+            obj.vy = obj.ground - dis - obj.y
+    else:
+        obj.vy = 0
 
 class Runner:
     def __init__(self, x, y, fly = False):
@@ -38,36 +50,27 @@ class Runner:
         if self.fly:
             self.y = game_height
             self.vy = - 3
-        self.frame_num = 0
-        self.frame_total = 6
-        self.switch = 0
-        self.frame_num_f = 0
-        self.frame_total_f = 2
+        self.frame_num = 0 # the current runner frame
+        self.frame_total = 6 
+        self.switch = 0 # control the speed of switching frames
+        self.frame_num_f = 0 # the current flying frame
+        self.frame_total_f = 2 
         self.img = loadImage(path + "/trump.png")
         self.img_fly = loadImage(path + "/trumpwings.png")
-        
-    def gravity(self):
-        if self.y + self.r < self.ground:
-            self.vy += 0.1
-            if self.y + self.r + self.vy > self.ground:
-                self.vy = self.ground - self.r - self.y
-        else:
-            self.vy = 0
 
     def update(self):
-        
+        # for every 3 draws switch frame
         if self.switch == 2:
             self.frame_num = (self.frame_num + 1) % self.frame_total
-        
-        
+            
         if not self.fly:
-            self.gravity()
+            gravity(self, self.r)
         
         self.vx += 0.002 # level gradually increases as the speed increases
                 
         if self.jump:
             self.vy -= 0.5
-            
+        # when out of screen display flying character from ground
         if self.fly:
             self.x += self.vx
             if self.switch == 2:
@@ -97,12 +100,11 @@ class Runner:
                   int((self.frame_num_f + 1) * self.r * 6), self.r * 2)
             # ellipse(self.x, self.y, self.r * 2, self.r * 2)
 
-        if not self.fly:
+        else:
             for hammer in self.hammers:
                 hammer.display()
             for hammer in self.thrown:
                 hammer.display()
-                
             # ellipse(self.x, self.y, self.r * 2, self.r * 2)
             
             image(self.img, self.x - self.r, self.y - self.r, self.r * 2, self.r * 2,\
@@ -114,7 +116,7 @@ class Wall:
     def __init__(self, x = game_width):
         # randomly assign width and height of walls
         self.w = randint(60, 90)
-        self.h = randint(300, 525)
+        self.h = randint(350, 550)
         self.x = x
         self.y = 0
         self.vy = 0
@@ -123,28 +125,19 @@ class Wall:
         self.knocked_down = False
         self.img = img_wall
         self.transwall = img_transwall
-        
-    def gravity(self):
-        # visual effect of walls being built on spot
-        if self.y + self.h < self.ground:
-            self.vy += 0.1
-            if self.y + self.h + self.vy > self.ground:
-                self.vy = self.ground - self.h - self.y
-        else:
-            self.vy = 0
                 
     def update(self):
-        self.gravity()
+        gravity(self, self.h) # visual effect of building walls
         self.y += self.vy
     
     def display(self):
         self.update()
-        if not self.knocked_down:
-            image(self.img, self.x, self.y, self.w, self.h)
-            # rect(self.x, self.y, self.w, self.h)
-        else:
+        if self.knocked_down:
             # display transparent walls if knocked down
             image(self.transwall, self.x, self.y, self.w, self.h)
+        else:
+            image(self.img, self.x, self.y, self.w, self.h)
+            # rect(self.x, self.y, self.w, self.h)
     
 class Hammer:
     def __init__(self, x = game_width * 1.25):
@@ -156,23 +149,16 @@ class Hammer:
         self.vy = 0
         self.throw = False
         self.owner = ""
-        self.frame_num = 0
+        self.frame_num = 0 # current frame
         self.frame_total = 6
         self.img = img_hammer
-    
-    def gravity(self):
-        if self.y + self.r < self.ground:
-            self.vy += 0.1
-            if self.y + self.r + self.vy > self.ground:
-                self.vy = self.ground - self.r - self.y
     
     def update(self):
         # hammers only fly when thrown. otherwise stationed
         if self.throw:
-            self.gravity()
+            gravity(self, self.r)
             self.x += self.vx
             self.y += self.vy
-            
             self.frame_num = (self.frame_num + 1) % self.frame_total
             
     def display(self):
@@ -184,7 +170,6 @@ class Hammer:
         else:
             image(self.img, self.x - self.r, self.y - self.r, self.r * 2, self.r * 2,\
                   0, 0, self.r * 2, self.r * 2)
-            
         # ellipse(self.x, self.y, self.r * 2, self.r * 2)
 
 class Game:
@@ -194,10 +179,10 @@ class Game:
         self.ground = ground
         self.state = "menu" # menu, play, over, fly
         self.runner = Runner(self.w / 2, ground - 35)
-        self.layers = [self.w, self.w, self.w] # record start of each background layer
-        self.walls = [Wall(), Wall(game_width * 1.5)]
-        self.hammers = []
-        self.bg = []
+        self.layers = [self.w, self.w, self.w] # start of each background layer
+        self.walls = [Wall(), Wall(game_width * 1.5)] # create first 2 walls to display 
+        self.hammers = [] # hammers available
+        self.bg = [] # 3 background layers
         for i in range(3, 0, -1):
             img = loadImage(path + "/layer" + str(i) + ".png")
             self.bg.append(img)
@@ -206,7 +191,7 @@ class Game:
         self.restart = loadImage(path + "/text.png")
         self.stars = loadImage(path + "/stars.png")
         self.sky = loadImage(path + "/sky.png")
-        self.frame_num_s = 0
+        self.frame_num_s = 0 # current stars frame (to be displayed above runner)
         self.frame_total_s = 4
         self.switch = 0
         
@@ -220,7 +205,7 @@ class Game:
                     self.layers[i] += (self.w - speed)
                 else:
                     self.layers[i] -= speed
-                ratio -= 0.1 # layers at the back moves slower
+                ratio -= 0.15 # layers at the back moves slower
             
             # if runner goes out of screen, fly
             if self.runner.y < -self.runner.r:
@@ -256,18 +241,20 @@ class Game:
                     self.runner.hammers.append(self.hammers.pop(self.hammers.index(hammer)))
                 # remove hammer from list when disappears from screen unobtained
                 if hammer.x < 0:
-                    self.hammers.remove(hammer)
-                    
+                    self.hammers.remove(hammer)        
                     
         if self.state == "fly":
+            # when runner jumps out of screen, display flying character
+            # when flying character flies out of screen, game over
             if self.runner.x > game_width or self.runner.y < 0:
                 self.state = "over"
                 
         if self.state == "over":
-            if self.switch == 2:
-                self.frame_num_s = (self.frame_num_s + 1) % self.frame_total_s
-            self.switch = (self.switch + 1) % 3
+            # if runner hits the wall, display turing stars above
             if not self.runner.fly:
+                if self.switch == 2:
+                    self.frame_num_s = (self.frame_num_s + 1) % self.frame_total_s
+                self.switch = (self.switch + 1) % 3
                 self.runner.y = ground - 35
             
     def display(self):
@@ -275,15 +262,12 @@ class Game:
         if self.state == "play":
             
             for img in self.bg:
-                loc = self.layers[self.bg.index(img)]
+                loc = self.layers[self.bg.index(img)] # starting point
                 image(img, loc, 0)
                 image(img, loc - self.w, 0)
-            
             self.runner.display()
-        
             for wall in self.walls:
                 wall.display()
-    
             for hammer in self.hammers:
                 hammer.display()
                 
@@ -339,7 +323,3 @@ def mouseClicked():
     if game.state == "menu" and 600 < mouseX < 680 and 350 < mouseY < 370:
         game.__init__()
         game.state = "play"
-
-
-
-    
