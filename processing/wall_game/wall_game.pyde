@@ -1,3 +1,5 @@
+add_library("minim")
+minim = Minim(this)
 import os
 from random import randint
 path = os.getcwd()
@@ -195,6 +197,8 @@ class Game:
         self.frame_total_s = 4
         self.switch = 0
         self.score = 0 # number of walls runner jumps pass
+        self.sound_start = minim.loadFile(path + "/are_you_ready.mp3")
+        self.sound_end = minim.loadFile(path + "/and_i_said.mp3")
         
     def update(self):
         if self.state == "play":
@@ -292,10 +296,14 @@ class Game:
                       self.runner.r * 2, self.runner.r * 2,\
                       0, 0,\
                       self.runner.r * 2, self.runner.r * 2)
+                self.sound_start.pause() # avoid sound overlap
+                self.sound_end.play()
             
         else:
             image(self.sky, 0, 0)
             self.runner.display()
+            self.sound_start.pause()
+            self.sound_end.play()
     
 game = Game() 
 
@@ -324,4 +332,6 @@ def keyReleased():
 def mouseClicked():
     if game.state == "menu" and 600 < mouseX < 680 and 350 < mouseY < 370:
         game.__init__()
+        game.sound_end.pause()
+        game.sound_start.play()
         game.state = "play"
