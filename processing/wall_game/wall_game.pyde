@@ -4,6 +4,15 @@ import os
 from random import randint
 path = os.getcwd()
 
+r = open("ranking.txt", "r+")
+ranking = []
+for entry in r:
+    tmp = []
+    for item in entry:
+        tmp.append(item)
+    ranking.append(tmp)
+print(ranking)
+
 ground = 670
 game_width = 1280
 game_height = 720
@@ -262,6 +271,14 @@ class Game:
                     self.frame_num_s = (self.frame_num_s + 1) % self.frame_total_s
                 self.switch = (self.switch + 1) % 3
                 self.runner.y = ground - 35
+            for entry in ranking:
+                if self.score > int(entry[0]):
+                    self.name = input("Congratulations! Please enter your name: ")
+                    ranking.insert(ranking.index(entry) - 1, [self.score, self.name])
+                    ranking.pop()
+                    break
+            for entry in ranking:
+                r.write(str(entry[0]) + "," + self.name + "\n")
             
     def display(self):
         self.update()
@@ -298,6 +315,10 @@ class Game:
                       self.runner.r * 2, self.runner.r * 2)
                 self.sound_start.pause() # avoid sound overlap
                 self.sound_end.play()
+            tmp = 0
+            for entry in ranking:
+                text(str(entry[0]) + "\t" + entry[1], 0, tmp)
+                tmp += 20
             
         else:
             image(self.sky, 0, 0)
